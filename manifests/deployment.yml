@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "cloudcomputing-31dd"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "cloudcomputing-31dd"
+  template:
+    metadata:
+      labels:
+        app: "cloudcomputing-31dd"
+    spec:
+      containers:
+        - name: "cloudcomputing-31dd"
+          image: "cloudcomputingb740.azurecr.io/cloudcomputing"
+          ports:
+          - containerPort: 3001
