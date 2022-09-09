@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: backend
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: backend
+    spec:
+      containers:
+        - image: backend
+          name: backend
+          ports:
+            - containerPort: 3001
+            - containerPort: 8080
+          resources: {}
+          volumeMounts:
+            - mountPath: /storage
+              name: file-storage
+      restartPolicy: Always
+      volumes:
+        - name: file-storage
+          persistentVolumeClaim:
+            claimName: file-storage
+status: {}
