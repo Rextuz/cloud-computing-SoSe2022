@@ -3,20 +3,27 @@ from fabric.operations import local, put, run
 
 RESOURCE_GROUP = "myresourcegroup"
 LOCATION = "westeurope"
+SUBSCRIPTION = "0be60f2e-ba63-4e12-92ac-7d8e49c57c95"
+
+
+def azure_login():
+    local("az login")
+    local(f"az account set --subscription {SUBSCRIPTION}")
+
+
+def create_resource_group():
+    local(f"az group create --name {RESOURCE_GROUP} --location {LOCATION}")
 
 
 def delete_resource_group():
     local(f"az group delete --yes --name {RESOURCE_GROUP}")
 
 
-def vm_create_backend():
-    local("az login")
-    local("az account set --subscription 0be60f2e-ba63-4e12-92ac-7d8e49c57c95")
-    local(f"az group create --name {RESOURCE_GROUP} --location {LOCATION}")
+def create_vm(name):
     local(
         f"az vm create"
         f" --resource-group {RESOURCE_GROUP}"
-        f" --name backend"
+        f" --name {name}"
         f" --size Standard_B1ls"
         f" --image UbuntuLTS"
         f" --public-ip-sku Standard"
@@ -60,6 +67,9 @@ def install_frontend():
 
 
 def deploy_backend():
+    azure_login()
+    create_resource_group()
+    create_vm("backend")
     install_nodejs()
     copy_backend()
     install_backend()
