@@ -1,9 +1,12 @@
+import json
+
 from fabric.context_managers import cd, shell_env
 from fabric.operations import local, put, run
 
-RESOURCE_GROUP = "myresourcegroup"
 LOCATION = "westeurope"
+RESOURCE_GROUP = "myresourcegroup"
 SUBSCRIPTION = "0be60f2e-ba63-4e12-92ac-7d8e49c57c95"
+USER = "azureuser"
 
 
 def azure_login():
@@ -20,18 +23,23 @@ def delete_resource_group():
 
 
 def create_vm(name):
-    local(f"az vm create"
-          f" --resource-group {RESOURCE_GROUP}"
-          f" --name {name}"
-          f" --size Standard_B1ls"
-          f" --image UbuntuLTS"
-          f" --public-ip-sku Standard"
-          f" --admin-username azureuser")
+    return json.loads(
+        local(
+            f"az vm create"
+            f" --resource-group {RESOURCE_GROUP}"
+            f" --name {name}"
+            f" --size Standard_B1ls"
+            f" --image UbuntuLTS"
+            f" --public-ip-sku Standard"
+            f" --admin-username {USER}",
+            capture=True,
+        )
+    )["publicIpAddress"]
 
 
 def install_nodejs():
-    run("apt update")
-    run("apt install curl -y")
+    run("sudo apt update")
+    run("sudo apt install curl -y")
     run("curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -")
     run("sudo apt install -y nodejs")
     run("node --version")
@@ -54,8 +62,8 @@ def install_docker():
 
 
 def copy_backend():
-    run("mkdir -p /root/cloud_computing/backend")
-    put("./app/backend", "/root/cloud_computing")
+    run(f"mkdir -p /home/{USER}/backend")
+    put("./app/backend", f"/home/{USER}")
 
 
 def copy_frontend():
@@ -69,12 +77,12 @@ def copy_database():
 
 
 def install_backend():
-    run("mkdir -p /storage/profile_uploads")
-    run("mkdir -p /storage/course_uploads")
+    run(f"mkdir -p /home/{USER}/profile_uploads")
+    run(f"mkdir -p /home/{USER}/course_uploads")
     with shell_env(
-            PROFILE_STORAGE="/storage/profile_uploads",
-            COURSE_STORAGE="/storage/course_uploads",
-    ), cd("/root/cloud_computing/backend"):
+        PROFILE_STORAGE=f"/home/{USER}/profile_uploads",
+        COURSE_STORAGE=f"/home/{USER}/course_uploads",
+    ), cd(f"/home/{USER}/backend"):
         run("npm install")
         run("node index.js")
 
@@ -92,10 +100,10 @@ def start_docker():
 def deploy_backend():
     azure_login()
     create_resource_group()
-    create_vm("backend")
-    install_nodejs()
-    copy_backend()
-    install_backend()
+    backend_ip = create_vm("backend")
+    local(f"fab --hosts {USER}@{backend_ip} install_nodejs")
+    local(f"fab --hosts {USER}@{backend_ip} copy_backend")
+    local(f"fab --hosts {USER}@{backend_ip} install_backend")
 
 
 def deploy_database():
