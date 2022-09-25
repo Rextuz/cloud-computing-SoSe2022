@@ -2,6 +2,7 @@ import json
 
 from fabric.context_managers import cd, shell_env
 from fabric.operations import local, put, run
+from fabric.state import env
 
 LOCATION = "westeurope"
 RESOURCE_GROUP = "myresourcegroup"
@@ -45,20 +46,11 @@ def install_nodejs():
     run("node --version")
 
 
-# from https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
 def install_docker():
-    run("sudo apt-get update")
-    run("sudo apt-get install ca-certificates curl gnupg lsb-release")
-    run("sudo mkdir -p /etc/apt/keyrings")
-    run("curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
-        )
-    run("echo 'deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null"
-        )
-    run("sudo apt-get update")
-    run("sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin"
-        )
-    #run("sudo systemctl enable docker") # uncomment if necessary
+    run("sudo apt update")
+    run("sudo apt install -y docker.io docker-compose")
+    run("sudo systemctl enable --now docker")
+    run(f"sudo usermod -a -G docker {USER}")
 
 
 def copy_backend():
@@ -71,9 +63,9 @@ def copy_frontend():
     put("./app/frontend", "/root/cloud_computing")
 
 
-def copy_database():
-    run("mkdir -p /root/cloud_computing/database")
-    put("./app/database/docker-compose.yml", "/root/cloud_computing/database")
+def copy_database_config():
+    run(f"mkdir -p /home/{USER}/database")
+    put("./app/database/docker-compose.yml", f"/home/{USER}/database")
 
 
 def install_backend():
@@ -93,8 +85,9 @@ def install_frontend():
         run("npm start")
 
 
-def start_docker():
-    run("docker compose up")
+def start_database_service():
+    with cd(f"/home/{USER}/database"):
+        run("docker-compose up -d")
 
 
 def deploy_backend():
@@ -107,6 +100,9 @@ def deploy_backend():
 
 
 def deploy_database():
-    install_docker()
-    copy_database()
-    start_docker()
+    azure_login()
+    create_resource_group()
+    db_ip = create_vm("database")
+    local(f"fab --hosts {USER}@{db_ip} install_docker")
+    local(f"fab --hosts {USER}@{db_ip} copy_database_config")
+    local(f"fab --hosts {USER}@{db_ip} start_database_service")
