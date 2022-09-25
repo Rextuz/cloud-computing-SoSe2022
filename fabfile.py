@@ -1,5 +1,27 @@
 from fabric.context_managers import cd, shell_env
-from fabric.operations import put, run
+from fabric.operations import local, put, run
+
+RESOURCE_GROUP = "myresourcegroup"
+LOCATION = "westeurope"
+
+
+def delete_resource_group():
+    local(f"az group delete --yes --name {RESOURCE_GROUP}")
+
+
+def vm_create_backend():
+    local("az login")
+    local("az account set --subscription 0be60f2e-ba63-4e12-92ac-7d8e49c57c95")
+    local(f"az group create --name {RESOURCE_GROUP} --location {LOCATION}")
+    local(
+        f"az vm create"
+        f" --resource-group {RESOURCE_GROUP}"
+        f" --name backend"
+        f" --size Standard_B1ls"
+        f" --image UbuntuLTS"
+        f" --public-ip-sku Standard"
+        f" --admin-username azureuser"
+    )
 
 
 def install_nodejs():
