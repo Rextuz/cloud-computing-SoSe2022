@@ -1,8 +1,8 @@
 import json
 
-from fabric.context_managers import cd, shell_env
+from fabric.context_managers import cd, settings, shell_env
 from fabric.operations import local, put, run
-from fabric.state import env
+from fabric.tasks import execute
 
 LOCATION = "westeurope"
 RESOURCE_GROUP = "myresourcegroup"
@@ -94,15 +94,17 @@ def deploy_backend():
     azure_login()
     create_resource_group()
     backend_ip = create_vm("backend")
-    local(f"fab --hosts {USER}@{backend_ip} install_nodejs")
-    local(f"fab --hosts {USER}@{backend_ip} copy_backend")
-    local(f"fab --hosts {USER}@{backend_ip} install_backend")
+    with settings(host_string=f"{USER}@{backend_ip}"):
+        execute(install_nodejs)
+        execute(copy_backend)
+        execute(install_backend)
 
 
 def deploy_database():
     azure_login()
     create_resource_group()
     db_ip = create_vm("database")
-    local(f"fab --hosts {USER}@{db_ip} install_docker")
-    local(f"fab --hosts {USER}@{db_ip} copy_database_config")
-    local(f"fab --hosts {USER}@{db_ip} start_database_service")
+    with settings(host_string=f"{USER}@{db_ip}"):
+        execute(install_docker)
+        execute(copy_database_config)
+        execute(start_database_service)
