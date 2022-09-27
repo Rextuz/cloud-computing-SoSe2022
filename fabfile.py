@@ -2,7 +2,6 @@ import json
 
 from fabric.context_managers import cd, settings, shell_env
 from fabric.operations import local, put, run
-from fabric.tasks import execute
 
 LOCATION = "westeurope"
 RESOURCE_GROUP = "myresourcegroup"
@@ -95,9 +94,9 @@ def deploy_backend():
     create_resource_group()
     backend_ip = create_vm("backend")
     with settings(host_string=f"{USER}@{backend_ip}"):
-        execute(install_nodejs)
-        execute(copy_backend)
-        execute(install_backend)
+        install_nodejs()
+        copy_backend()
+        install_backend()
 
 
 def deploy_database():
@@ -105,6 +104,6 @@ def deploy_database():
     create_resource_group()
     db_ip = create_vm("database")
     with settings(host_string=f"{USER}@{db_ip}"):
-        execute(install_docker)
-        execute(copy_database_config)
-        execute(start_database_service)
+        install_docker()
+        copy_database_config()
+        start_database_service()
