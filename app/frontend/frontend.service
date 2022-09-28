@@ -1,0 +1,12 @@
+[Unit]
+Description=Frontend service
+
+[Service]
+Type=simple
+ExecStart=/home/azureuser/frontend/frontend.sh
+Restart=always
+RestartSec=10
+Environment=CI="true"
+
+[Install]
+WantedBy=multi-user.target

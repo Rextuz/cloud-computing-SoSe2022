@@ -1,0 +1,13 @@
+[Unit]
+Description=Backend service
+
+[Service]
+Type=simple
+ExecStart=/home/azureuser/backend/backend.sh
+Restart=always
+RestartSec=10
+Environment=PROFILE_STORAGE="/home/azureuser/profile_uploads"
+Environment=COURSE_STORAGE="/home/azureuser/course_uploads"
+
+[Install]
+WantedBy=multi-user.target
