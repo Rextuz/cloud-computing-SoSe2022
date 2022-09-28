@@ -1,5 +1,3 @@
-# Manual provision
-## Backend
 ```
-fab deploy_backend
+fab deploy_all
 ```
