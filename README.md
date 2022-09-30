@@ -2,6 +2,8 @@
 
 Abdullah Butt (1386310), Alexander Wiegel (848797), Maksim Kanushin (1375365), Ziad Khaled (1380206)
 
+Group CloudComp2
+
 ## Technologies used:
  - Azure CLI
  - Python fabric
